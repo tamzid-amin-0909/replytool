@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VILTRAMITE'S TOOL (Default Normal + UI Highlight)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'whatsapp-green': '#075E54',
+                        'whatsapp-teal': '#128C7E',
+                        'whatsapp-light': '#D9FDD3',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Consolas', 'Monospace', 'Courier New'], // Use a common monospace font for fixed-width spacing
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Force monospace font for the entire output section to ensure spaces align */
+        #codeOutput {
+            font-family: var(--font-mono);
+            white-space: pre; /* Important to preserve all whitespace and line breaks */
+            line-height: 1.25;
+            min-height: 120px; 
+        }
+        /* Custom styles to hide the radio button circle but keep the functionality */
+        .custom-radio input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+        /* Style for the radio label box */
+        .custom-radio label {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid #D1D5DB; /* default gray border */
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        /* Style when the radio button is checked */
+        .custom-radio input[type="radio"]:checked + label {
+            background-color: #128C7E; /* whatsapp-teal */
+            color: white;
+            border-color: #128C7E;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 font-sans flex flex-col items-center">
+
+    <div class="max-w-xl w-full bg-white shadow-2xl rounded-xl p-8 space-y-6">
+        <h1 class="text-3xl font-extrabold text-center text-whatsapp-teal border-b-4 border-whatsapp-green pb-2 mb-6">VILTRAMITE'S TOOL</h1>
+        <p class="text-sm text-gray-600 text-center">The name is converted to **Bold Unicode**. Use the toggle below to switch between **Monospace** and **Normal** formatting.</p>
+        
+        <!-- Input Form -->
+        <div class="space-y-4">
+            
+            <h2 class="text-lg font-semibold text-gray-700">1. Original Sender Details (The Reply Block)</h2>
+            
+            <!-- Original Name -->
+            <div>
+                <label for="originalName" class="block text-sm font-medium text-gray-700">Original Sender Name - Will be 'Boldest' Unicode</label>
+                <input type="text" id="originalName" value="Amin Modder" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-whatsapp-teal focus:ring-whatsapp-teal p-3 border" oninput="updatePreview()">
+                <!-- Character Counter (simple count) -->
+                <p id="nameCharCount" class="text-sm mt-1 text-gray-700 font-semibold">11 characters.</p>
+                <p class="text-xs text-gray-500 mt-1">**Rules:** Name is Unicode-bolded. 50 spaces are inserted after the closing asterisk (`*`).</p>
+            </div>
+
+            <!-- Original Message (The message being replied to) -->
+            <div>
+                <label for="originalMessage" class="block text-sm font-medium text-gray-700 mb-2">Original Message Content (The message being replied to)</label>
+                <input type="text" id="originalMessage" value="Amin is a VILTRAMITE" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-whatsapp-teal focus:ring-whatsapp-teal p-3 border" oninput="updatePreview()">
+                
+                <!-- Monospace Toggle with UI Highlight -->
+                <div class="mt-4 flex items-center space-x-6">
+                    <p class="text-sm font-medium text-gray-700">Message Formatting:</p>
+                    
+                    <div class="custom-radio">
+                        <input id="formatMonospace" name="messageFormat" type="radio" value="monospace" onchange="updatePreview()">
+                        <label for="formatMonospace" class="text-sm text-gray-700 hover:border-whatsapp-teal">Monospace</label>
+                    </div>
+
+                    <div class="custom-radio">
+                        <input id="formatNormal" name="messageFormat" type="radio" value="normal" checked onchange="updatePreview()">
+                        <label for="formatNormal" class="text-sm text-gray-700 hover:border-whatsapp-teal">Normal</label>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-lg font-semibold pt-4 text-gray-700">2. Replied Message Text</h2>
+            
+            <!-- Replied Message (The actual 'prank' text) -->
+            <div>
+                <label for="repliedMessage" class="block text-sm font-medium text-gray-700">Replied Message Content (The main prank text)</label>
+                <input type="text" id="repliedMessage" value="For real" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-whatsapp-teal focus:ring-whatsapp-teal p-3 border" oninput="updatePreview()">
+            </div>
+
+        </div>
+
+        <!-- Output Section -->
+        <h2 class="text-xl font-bold pt-4 text-center text-whatsapp-teal">Generated Text Output</h2>
+        <div class="bg-gray-200 p-3 rounded-lg shadow-inner">
+            <!-- Increased rows to 6 for better visibility -->
+            <textarea id="codeOutput" rows="6" readonly class="w-full h-auto resize-none bg-white border border-gray-400 p-2 rounded-lg text-sm text-gray-900"></textarea>
+            <button onclick="copyToClipboard()" class="mt-3 w-full bg-whatsapp-teal hover:bg-whatsapp-green text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-200">
+                Copy Generated Text
+            </button>
+            <p id="copyMessage" class="text-center text-sm mt-2 text-green-700 opacity-0 transition duration-300">Text copied!</p>
+        </div>
+
+    </div>
+
+    <script>
+        
+        // Maps standard characters to their Bold Sans-Serif Unicode equivalents
+        function convertToBoldUnicode(text) {
+            const boldMap = {
+                'A': '𝗔', 'B': '𝗕', 'C': '𝗖', 'D': '𝗗', 'E': '𝗘', 'F': '𝗙', 'G': '𝗚', 'H': '𝗛', 'I': '𝗜', 'J': '𝗝', 'K': '𝗞', 'L': '𝗟', 'M': '𝗠', 'N': '𝗡', 'O': '𝗢', 'P': '𝗣', 'Q': '𝗤', 'R': '𝗥', 'S': '𝗦', 'T': '𝗧', 'U': '𝗨', 'V': '𝗩', 'W': '𝗪', 'X': '𝗫', 'Y': '𝗬', 'Z': '𝗭',
+                'a': '𝗮', 'b': '𝗯', 'c': '𝗰', 'd': '𝗱', 'e': '𝗲', 'f': '𝗳', 'g': '𝗴', 'h': '𝗵', 'i': '𝗶', 'j': '𝗷', 'k': '𝗸', 'l': '𝗹', 'm': '𝗺', 'n': '𝗻', 'o': '𝗼', 'p': '𝗽', 'q': '𝗾', 'r': '𝗿', 's': '𝘀', 't': '𝘁', 'u': '𝘂', 'v': '𝘃', 'w': '𝘄', 'x': '𝘅', 'y': '𝘆', 'z': '𝘇',
+                '0': '𝟬', '1': '𝟭', '2': '𝟮', '3': '𝟯', '4': '𝟰', '5': '𝟱', '6': '𝟲', '7': '𝟳', '8': '𝟴', '9': '𝟵'
+            };
+            return text.split('').map(char => boldMap[char] || char).join('');
+        }
+
+        function updatePreview() {
+            const originalNameInput = document.getElementById('originalName');
+            const originalName = originalNameInput.value.trim() || 'Amin Modder';
+            const originalMessage = document.getElementById('originalMessage').value.trim() || 'Amin is a VILTRAMITE';
+            const repliedMessage = document.getElementById('repliedMessage').value.trim() || 'For real';
+            const codeOutput = document.getElementById('codeOutput');
+            const nameCharCountElement = document.getElementById('nameCharCount');
+            
+            // Get the selected format (monospace or normal)
+            const format = document.querySelector('input[name="messageFormat"]:checked').value;
+
+            // --- CORE LOGIC ---
+
+            // 1. Convert the original name to the boldest Unicode
+            const bolderName = convertToBoldUnicode(originalName);
+            
+            // 2. Apply formatting based on the toggle
+            let formattedMessage = originalMessage;
+            if (format === 'monospace') {
+                // Use triple backticks for monospace
+                formattedMessage = 'ㅤ```' + originalMessage + '```';
+            }
+            if (format === 'normal') {
+                // Use triple backticks for monospace
+                formattedMessage = 'ㅤ' + originalMessage ;
+            }
+            
+            // 3. Hardcoded 50 spaces
+            const HARDCODED_SPACE_GAP = ' '.repeat(300);
+
+            // 4. Build the name prefix: > *~ [Bolder Name]*
+            const namePrefix = `> *~ ${bolderName}*`;
+
+            // 5. Construct the first line (Reply Block)
+            const line1 = namePrefix + HARDCODED_SPACE_GAP + formattedMessage;
+
+            // --- END CORE LOGIC ---
+
+            // Update Character Counter (simple length display)
+            const currentLength = originalName.length;
+            nameCharCountElement.textContent = `${currentLength} character${currentLength !== 1 ? 's' : ''}.`;
+
+            // 6. Construct the final output
+            codeOutput.value = line1 + '\n' + repliedMessage;
+        }
+
+        function copyToClipboard() {
+            const textarea = document.getElementById('codeOutput');
+            textarea.select();
+            document.execCommand('copy');
+            
+            // Show confirmation message
+            const copyMsg = document.getElementById('copyMessage');
+            copyMsg.classList.remove('opacity-0');
+            copyMsg.classList.add('opacity-100');
+            setTimeout(() => {
+                copyMsg.classList.remove('opacity-100');
+                copyMsg.classList.add('opacity-0');
+            }, 1500);
+        }
+
+        document.addEventListener('DOMContentLoaded', updatePreview);
+    </script>
+</body>
+</html>
+
